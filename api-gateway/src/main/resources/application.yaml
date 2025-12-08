@@ -83,6 +83,5 @@ management:
 
 security:
   jwt:
-    secret: "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_KEY_32_CHARS_MINIMUM"
-    # milliseconds
+    secret: "TgsAuthServiceJwtKey_2025_Secure!"
     expiration: 3600000
