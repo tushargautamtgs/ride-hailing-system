@@ -47,7 +47,6 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(role))
                 .build();
-
         userRepository.save(user);
 
         //sending kafka event

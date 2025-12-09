@@ -22,22 +22,23 @@ public class KafkaProducerService {
         String message = json.toString();
         String topic = "user-registered";
 
-        log.info("🔥 Preparing to send USER_REGISTERED event → {}", message);
+        log.info("Preparing to send USER_REGISTERED event → {}", message);
 
         kafkaTemplate.send(topic, message)
                 .whenComplete((result, ex) -> {
 
                     if (ex == null) {
-                        log.info("✅ Successfully sent event to Kafka Topic '{}'", topic);
-                        log.info("📌 Partition: {}, Offset: {}",
+                        log.info("=> Successfully sent event to Kafka Topic '{}'", topic);
+                        log.info("=> Partition: {}, Offset: {}",
                                 result.getRecordMetadata().partition(),
                                 result.getRecordMetadata().offset()
                         );
                     } else {
-                        log.error("❌ Failed to send event to Kafka Topic '{}'", topic);
+                        log.error("=> Failed to send event to Kafka Topic '{}'", topic);
                         log.error("Reason: {}", ex.getMessage());
                     }
 
                 });
     }
+
 }
