@@ -5,6 +5,7 @@ import com.tushargautamtgs.auth_service.auth.dto.AuthResponse;
 import com.tushargautamtgs.auth_service.auth.dto.LoginRequest;
 import com.tushargautamtgs.auth_service.auth.dto.RefreshTokenRequest;
 import com.tushargautamtgs.auth_service.auth.dto.RegisterRequest;
+import com.tushargautamtgs.auth_service.kafkaproducer.KafkaProducerService;
 import com.tushargautamtgs.auth_service.security.JwtService;
 import com.tushargautamtgs.auth_service.token.RefreshToken;
 import com.tushargautamtgs.auth_service.token.RefreshTokenRepository;
@@ -27,6 +28,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthService {
 
+
+
+    private final KafkaProducerService procuder;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -45,6 +49,13 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+
+        //sending kafka event
+        procuder.sendUserRegisteredEvent(
+                user.getUsername(),
+                role.name()
+        );
+
     }
 
 
