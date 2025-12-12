@@ -33,4 +33,14 @@ public class UserController {
         String username = jwtUtil.extractUsername(auth);
         return service.update(username,req);
     }
+
+    //delete user's acc...
+    @DeleteMapping("/me")
+    public String delete(
+            @RequestHeader("Authorization") String auth
+    ){
+        String username = jwtUtil.extractUsername(auth);
+        service.delete(username);
+        return "User profile deleted successfully";
+    }
 }

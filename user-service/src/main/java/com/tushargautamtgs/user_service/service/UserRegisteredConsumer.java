@@ -21,11 +21,15 @@ public class UserRegisteredConsumer {
         JSONObject json = new JSONObject(message);
 
         String username = json.getString("username");
-        String email = json.optString("email");
+        String role = json.optString("role");
 
-        userService.createProfile(username,email);
+        if (!role.equalsIgnoreCase("RIDER")){
+            log.info("Skipping the event -> Role is not rider...");
+            return;
+        }
 
-        log.info("Profile created automatically for user by kafka event :  {}",username);
+        userService.createProfile(username);
+        log.info("Profile created  <= Kafka event consumed and Processed =>  {}",username);
 
     }
 }
