@@ -1,8 +1,10 @@
 package com.tushargautamtgs.auth_service.user;
 
+import com.tushargautamtgs.auth_service.token.RefreshToken;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -17,6 +19,8 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<RefreshToken> refreshTokens;
 
     @Column(unique = true, nullable = false)
     private String username;
