@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -28,16 +27,16 @@ public class SecurityConfig {
                         // public / infra
                         .requestMatchers("/actuator/health", "/error").permitAll()
 
-                        // driver-only
-                        .requestMatchers("/locations/drivers/**").hasRole("DRIVER")
+                        // driver updates location
+                        .requestMatchers("/location/drivers/**").hasRole("DRIVER")
 
-                        // internal service (matching-service)
-                        .requestMatchers("/locations/nearby").hasRole("DRIVER")
+                        // 🔥 INTERNAL SERVICE CALL (matching-service)
+                        .requestMatchers("/location/nearby").permitAll()
 
                         // everything else
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore((Filter) jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

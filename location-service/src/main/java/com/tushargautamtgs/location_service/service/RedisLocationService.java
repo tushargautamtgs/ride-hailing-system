@@ -19,13 +19,13 @@ public class RedisLocationService {
 
     private static final String KEY = "drivers:locations";
 
-    public void updateDriverLocation(String driverId, double lat, double lon) {
+    public void updateDriverLocation(String driverId, double lat, double lng) {
 
         log.info("==>> Updating driver location | driverId={} | lat={} | lon={}",
-                driverId, lat, lon);
+                driverId, lat, lng);
 
         // Redis GEO expects (longitude, latitude)
-        redisTemplate.opsForGeo().add(KEY, new Point(lon, lat), driverId);
+        redisTemplate.opsForGeo().add(KEY, new Point(lng, lat), driverId);
 
         log.info(" ==>> Driver location saved in Redis | driverId={}", driverId);
     }
@@ -57,7 +57,6 @@ public class RedisLocationService {
                 .collect(Collectors.toList());
 
         log.info(" ==>>Nearby drivers found: {}", drivers);
-
         return drivers;
     }
 
