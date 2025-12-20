@@ -32,6 +32,18 @@ public class JwtUtil {
         return token;
     }
 
+    @SuppressWarnings("unchecked")
+    public List<String> extractAuthorities(String token) {
+        try {
+            Object authObj = parseToken(token).getBody().get("authorities");
+            if (authObj instanceof List<?> list) {
+                return list.stream().map(String::valueOf).toList();
+            }
+        } catch (JwtException ignored) {}
+        return List.of();
+    }
+
+
     public Jws<Claims> parseToken(String token) {
         token = cleanToken(token);
         if (token == null || token.isBlank()) {

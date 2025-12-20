@@ -43,14 +43,17 @@ public class JwtFilter extends OncePerRequestFilter {
                         var authorities = roles.stream()
                                 .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
                                 .collect(Collectors.toList());
+                        jwtUtil.extractAuthorities(tokenCandidate)
+                                .forEach(a ->
+                                        authorities.add(new SimpleGrantedAuthority(a))
+                                );
 
                         var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 }
             } catch (Exception ex) {
-                // Log if you want, but do not stop the filter chain on JWT parse errors.
-                // For now we silently ignore invalid token so request proceeds as unauthenticated.
+
             }
         }
 

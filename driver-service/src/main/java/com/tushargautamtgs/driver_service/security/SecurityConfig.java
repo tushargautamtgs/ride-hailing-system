@@ -22,7 +22,9 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authorizeHttpRequests(auth -> auth
 
                         // infra
@@ -31,15 +33,16 @@ public class SecurityConfig {
                                 antMatcher("/public/**")
                         ).permitAll()
 
-                        // 🔥 MATCHING SERVICE INTERNAL CALL (NO JWT)
+                        // 🔐 INTERNAL: only matching-service
                         .requestMatchers(
-                                antMatcher(HttpMethod.GET, "/drivers/*/available")
-                        ).permitAll()
+                                HttpMethod.GET,
+                                "/drivers/*/available"
+                        ).hasAuthority("SERVICE_MATCHING")
 
-                        // driver self APIs (JWT required)
+                        // driver self APIs
                         .requestMatchers(
-                                antMatcher("/drivers/me/**")
-                        ).authenticated()
+                                "/drivers/me/**"
+                        ).hasRole("DRIVER")
 
                         // everything else
                         .anyRequest().authenticated()
