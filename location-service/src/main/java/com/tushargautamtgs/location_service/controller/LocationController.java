@@ -30,12 +30,12 @@ public class LocationController {
     @GetMapping("/nearby")
     public NearbyDriversResponse nearbyDrivers(
             @RequestParam("lat") double lat,
-            @RequestParam("lon") double lon,
+            @RequestParam("lng") double lng,
             @RequestParam(name = "radiusKm", defaultValue = "5") double radiusKm,
             @RequestParam(name = "limit", defaultValue = "10") int limit
     ) {
         return new NearbyDriversResponse(
-                service.nearbyDrivers(lat, lon, radiusKm, limit)
+                service.nearbyDrivers(lat, lng, radiusKm, limit)
         );
     }
 

@@ -65,6 +65,15 @@ public class DriverController {
         );
     }
 
+    @GetMapping("/{username}/available")
+    public Boolean isDriverAvailable(@PathVariable String username) {
+
+        DriverProfile driver = driverService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+        return driver.isActive()
+                && driver.getStatus() == DriverStatus.ONLINE;
+    }
 
 
     private DriverProfileResponse toResponse(DriverProfile p){

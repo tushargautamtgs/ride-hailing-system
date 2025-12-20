@@ -47,7 +47,7 @@ management:
 security:
   jwt:
     secret: "TgsAuthServiceJwtKey_2025_Secure!"
-    expiration: 3600000
+    expiration: 36000000  #  // 10 hours
 
 
 logging:

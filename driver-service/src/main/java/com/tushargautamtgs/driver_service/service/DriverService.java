@@ -20,6 +20,7 @@ public class DriverService {
         return repo.findByUsername(username);
     }
 
+
     @Transactional
     public DriverProfile updateProfile(String username, UpdateDriverRequest request){
         DriverProfile profile = repo.findByUsername(username)

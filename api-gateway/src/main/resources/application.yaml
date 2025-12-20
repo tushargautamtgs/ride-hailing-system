@@ -23,7 +23,7 @@ spring:
           lower-case-service-id: true
 
       routes:
-        # Auth Service (public)
+        # Auth Service
         - id: auth-service
           uri: lb://auth-service
           predicates:
@@ -59,7 +59,7 @@ spring:
           predicates:
             - Path=/matching/**
 
-        # Notification Service (WS etc.)
+        # Notification Service
         - id: notification-service
           uri: lb://notification-service
           predicates:

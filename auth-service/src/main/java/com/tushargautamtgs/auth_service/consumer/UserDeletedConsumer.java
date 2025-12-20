@@ -22,6 +22,6 @@ public class UserDeletedConsumer {
 
         repo.deleteByUsername(username);
 
-        System.out.println("User deleted from system " + username);
+        System.out.println("event from user-deleted topic is consumed by Auth-service and the User deleted from system " + username);
     }
 }
