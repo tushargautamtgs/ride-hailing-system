@@ -16,6 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Random;
 import java.util.UUID;
 
 
@@ -24,6 +25,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class RideServiceImpl implements RideService {
+
 
     private final RideRepository repository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -80,8 +82,12 @@ public class RideServiceImpl implements RideService {
         Ride ride = repository.findById(rideId)
                 .orElseThrow(() -> new RideNotFoundException("Ride not found"));
 
+        String code = generateRideCode();
+
         ride.setDriverUsername(driver);
         ride.setStatus(RideStatus.ASSIGNED);
+        ride.setRideCode(code);
+        ride.setRideCodeExpiry(Instant.now().plusSeconds(1800)); // 30 minutes expiry
 
         repository.save(ride);
 
@@ -96,7 +102,44 @@ public class RideServiceImpl implements RideService {
                         .build()
         );
 
+        log.info("OTP generated for ride assignment => rideId = {} <==> OTP = {}",rideId,code);
+
         return map(ride);
+    }
+
+
+    @Transactional
+    @Override
+    public RideResponse validateRide(UUID rideId,String rideCode){
+        Ride ride = repository.findById(rideId)
+                .orElseThrow(() -> new RideNotFoundException("Ride not found"));
+        if (ride.getStatus() != RideStatus.ASSIGNED){
+            throw new IllegalStateException("Ride can't be assigned");
+        }
+        if (ride.getRideCodeExpiry().isBefore(Instant.now())){
+            throw new IllegalStateException("OTP expired");
+        }
+        if (!ride.getRideCode().equals(rideCode)){
+            throw new IllegalArgumentException("Invalid OTP");
+        }
+        ride.setStatus(RideStatus.STARTED);
+        ride.setRideCode(null); // only for one time use
+        ride.setRideCodeExpiry(null);
+
+        repository.save(ride);
+
+        kafkaTemplate.send(
+                "ride-started",
+                ride.getId().toString(),
+                rideId
+        );
+        return map(ride);
+
+    }
+
+
+    private String generateRideCode(){
+        return String.valueOf(1000000 + new Random().nextInt(9000000));
     }
 
     private RideResponse map(Ride ride) {

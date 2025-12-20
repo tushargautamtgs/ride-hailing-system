@@ -29,5 +29,7 @@ public class Ride {
     @Enumerated(EnumType.STRING)
     private RideStatus status;
 
+    private String rideCode;
+    private Instant rideCodeExpiry;
     private Instant createdAt;
 }

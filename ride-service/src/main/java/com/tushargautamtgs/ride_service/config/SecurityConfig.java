@@ -35,21 +35,34 @@ public class SecurityConfig {
                                 "/actuator/**"
                         ).permitAll()
 
-                        // 🔥 MATCHING SERVICE INTERNAL CALL (MOST IMPORTANT)
+                        // 🔐 INTERNAL: matching-service assigns driver
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.POST,
-                                "/rides/**"
+                                "/rides/*/assign"
                         ).permitAll()
 
-                        // user APIs (JWT required)
+                        // 🚖 DRIVER APIs
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.PATCH,
+                                "/rides/*/status"
+                        ).hasRole("DRIVER")
+
+                        // 👤 USER APIs
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.POST,
+                                "/rides"
+                        ).authenticated()
+
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/rides/**"
+                        ).authenticated()
+
+                        // fallback
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 }
-
-
-

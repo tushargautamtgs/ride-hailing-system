@@ -16,4 +16,9 @@ public class KafkaConfig {
     public NewTopic rideAssigned() {
         return TopicBuilder.name("ride-assigned").build();
     }
+
+    @Bean
+    public NewTopic rideStarted(){
+        return TopicBuilder.name("ride-started").build();
+    }
 }

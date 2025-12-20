@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -35,22 +35,37 @@ public class JwtFilter extends OncePerRequestFilter {
                     && SecurityContextHolder.getContext().getAuthentication() == null
                     && jwtUtil.validateToken(authHeader)) {
 
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        jwtUtil.extractUsername(authHeader),
-                        null,
-                        jwtUtil.extractRoles(authHeader)
-                                .stream()
-                                .map(SimpleGrantedAuthority::new)
-                                .collect(Collectors.toList())
-                );
+                String username = jwtUtil.extractUsername(authHeader);
+                List<String> roles = jwtUtil.extractRoles(authHeader);
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                var authorities = roles.stream()
+                        .map(role -> {
+                            // 🔐 service-to-service
+                            if (role.startsWith("SERVICE_")) {
+                                return new SimpleGrantedAuthority(role);
+                            }
+                            // 👤 user / driver
+                            return new SimpleGrantedAuthority("ROLE_" + role);
+                        })
+                        .toList();
+
+                var authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                username,
+                                null,
+                                authorities
+                        );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            // Invalid / expired token → do NOT authenticate
+            // invalid / expired token → clear context
             SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
     }
+
+
 }

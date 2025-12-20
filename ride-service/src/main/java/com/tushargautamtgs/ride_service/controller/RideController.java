@@ -4,6 +4,7 @@ package com.tushargautamtgs.ride_service.controller;
 import com.tushargautamtgs.ride_service.dto.AssignDriverRequest;
 import com.tushargautamtgs.ride_service.dto.CreateRideRequest;
 import com.tushargautamtgs.ride_service.dto.RideResponse;
+import com.tushargautamtgs.ride_service.dto.ValidateRideRequest;
 import com.tushargautamtgs.ride_service.service.RideService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,19 @@ public class RideController {
     ) {
         return ResponseEntity.ok(
                 rideService.assignDriver(rideId, request.getDriverUsername())
+        );
+    }
+
+
+
+    @PostMapping("/{rideId}/validate")
+    @PreAuthorize("permitAll")
+    public ResponseEntity<RideResponse> validateRide(
+            @PathVariable UUID rideId,
+            @RequestBody ValidateRideRequest request
+            ){
+        return ResponseEntity.ok(
+                rideService.validateRide(rideId,request.getRideCode())
         );
     }
 
