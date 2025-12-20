@@ -33,11 +33,21 @@ public class JwtUtil {
         return parseClaims(token).getSubject();
     }
 
-    // ===== extract roles (LIST) =====
+    // ===== extract USER roles =====
     @SuppressWarnings("unchecked")
     public List<String> extractRoles(String token) {
         Object roles = parseClaims(token).get("roles");
         if (roles instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
+        }
+        return List.of();
+    }
+
+    // ===== extract SERVICE authorities =====
+    @SuppressWarnings("unchecked")
+    public List<String> extractAuthorities(String token) {
+        Object auths = parseClaims(token).get("authorities");
+        if (auths instanceof List<?> list) {
             return list.stream().map(String::valueOf).toList();
         }
         return List.of();

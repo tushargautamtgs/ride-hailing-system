@@ -24,14 +24,17 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+
                         // public / infra
                         .requestMatchers("/actuator/health", "/error").permitAll()
 
                         // driver updates location
-                        .requestMatchers("/location/drivers/**").hasRole("DRIVER")
+                        .requestMatchers("/location/drivers/**")
+                        .hasRole("DRIVER")
 
-                        // 🔥 INTERNAL SERVICE CALL (matching-service)
-                        .requestMatchers("/location/nearby").permitAll()
+                        // 🔐 INTERNAL: only matching-service
+                        .requestMatchers("/location/nearby")
+                        .hasAuthority("SERVICE_MATCHING")
 
                         // everything else
                         .anyRequest().authenticated()
