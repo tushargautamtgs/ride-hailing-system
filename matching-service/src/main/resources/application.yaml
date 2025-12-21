@@ -24,13 +24,10 @@ eureka:
   instance:
     prefer-ip-address: true
 
-<<<<<<< HEAD
-# 🔐 SERVICE-TO-SERVICE SECURITY (NEW)
+# 🔐 SERVICE-TO-SERVICE SECURITY
 security:
-  service-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtYXRjaGluZy1zZXJ2aWNlIiwiYXV0aG9yaXRpZXMiOlsiU0VSVklDRV9NQVRDSElORyJdLCJpYXQiOjE3NjYyNTYwMDAsImV4cCI6MTc2NjM0MjQwMH0.1AyMPHxW8PnehfoiJ2rpDObyCOKrgu5aEOmwNSHMWuU
-
-=======
->>>>>>> 5bfced7f705fcbbc59608da46c9e38eb238e0c16
+  jwt:
+    secret: TgsAuthServiceJwtKey_2025_Secure!
 logging:
   level:
     com.tushargautamtgs.matching_service: DEBUG

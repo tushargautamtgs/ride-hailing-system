@@ -36,8 +36,8 @@ public class SecurityConfig {
                         // 🔐 INTERNAL: only matching-service
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/drivers/*/available"
-                        ).hasAuthority("SERVICE_MATCHING")
+                                "/drivers/*/available").permitAll()
+//                        ).hasAuthority("SERVICE_MATCHING")
 
                         // driver self APIs
                         .requestMatchers(
