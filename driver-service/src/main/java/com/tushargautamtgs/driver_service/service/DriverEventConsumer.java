@@ -1,6 +1,8 @@
 package com.tushargautamtgs.driver_service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tushargautamtgs.driver_service.config.events.RideAssignedEvent;
+import com.tushargautamtgs.driver_service.config.events.RideStartedEvent;
 import com.tushargautamtgs.driver_service.event.UserCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,5 +51,44 @@ public class DriverEventConsumer {
             log.error("==> Error processing Kafka event in DriverEventConsumer", e);
         }
     }
+    @KafkaListener(topics = "ride-assigned", groupId = "driver-service-group")
+    public void consumeRideAssigned(ConsumerRecord<String, String> record) {
+        try {
+            RideAssignedEvent event =
+                    objectMapper.readValue(record.value(), RideAssignedEvent.class);
+
+            log.info(
+                    "🚕 Ride assigned | rideId={} | driver={}",
+                    event.getRideId(),
+                    event.getDriverUsername()
+            );
+
+            driverService.markDriverAssigned(event.getDriverUsername());
+
+        } catch (Exception e) {
+            log.error("Error processing ride-assigned event", e);
+        }
+    }
+
+    // 3️⃣ 🔥 RIDE STARTED → ON_RIDE
+    @KafkaListener(topics = "ride-started", groupId = "driver-service-group")
+    public void consumeRideStarted(ConsumerRecord<String, String> record) {
+        try {
+            RideStartedEvent event =
+                    objectMapper.readValue(record.value(), RideStartedEvent.class);
+
+            log.info(
+                    "▶️ Ride started | rideId={} | driver={}",
+                    event.getRideId(),
+                    event.getDriverUsername()
+            );
+
+            driverService.markDriverOnRide(event.getDriverUsername());
+
+        } catch (Exception e) {
+            log.error("Error processing ride-started event", e);
+        }
+    }
+
 }
 

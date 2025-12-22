@@ -58,4 +58,31 @@ public class DriverService {
         });
 
     }
+
+    // FOR UPDATE DRIVER'S STATUS AFTER ASSIGNING A RIDE
+    @Transactional
+    public void markDriverAssigned(String username) {
+
+        DriverProfile profile = repo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Profile Not Found"));
+
+        // safety check
+        if (profile.getStatus() != DriverStatus.ONLINE) {
+            // already ASSIGNED / ON_RIDE / OFFLINE
+            return;
+        }
+        profile.setStatus(DriverStatus.ASSIGNED);
+        repo.save(profile);
+    }
+
+    @Transactional
+    public void markDriverOnRide(String username) {
+
+        DriverProfile profile = repo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Profile Not Found"));
+
+        profile.setStatus(DriverStatus.ON_RIDE);
+        repo.save(profile);
+    }
+
 }
