@@ -32,4 +32,5 @@ public class Ride {
     private String rideCode;
     private Instant rideCodeExpiry;
     private Instant createdAt;
+    private Instant startedAt;
 }

@@ -9,6 +9,7 @@ import com.tushargautamtgs.ride_service.service.RideService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +34,7 @@ public class RideController {
     }
 
 
-    @PreAuthorize("permitAll()")
+//    @PreAuthorize("permitAll()")
     // for testing purposes
     @PostMapping("/{rideId}/assign")
     public ResponseEntity<RideResponse> assignDriver(
@@ -46,17 +47,24 @@ public class RideController {
     }
 
 
-
+    @PreAuthorize("hasRole('DRIVER')")
     @PostMapping("/{rideId}/validate")
-    @PreAuthorize("permitAll")
     public ResponseEntity<RideResponse> validateRide(
             @PathVariable UUID rideId,
-            @RequestBody ValidateRideRequest request
-            ){
+            @RequestBody ValidateRideRequest request,
+            Authentication authentication   // ✅ allowed everywhere
+    ) {
+        String driverUsername = authentication.getName(); // JWT username
+
         return ResponseEntity.ok(
-                rideService.validateRide(rideId,request.getRideCode())
+                rideService.validateRide(
+                        rideId,
+                        driverUsername,
+                        request.getRideCode()
+                )
         );
     }
+
 
 }
 

@@ -13,5 +13,6 @@ public interface RideService {
 
     RideResponse assignDriver(UUID rideId, String driverUsername);
 
-    RideResponse validateRide(UUID rideId, String rideCode);
+    RideResponse validateRide(UUID rideId, String driverUsername, String rideCode);
+
 }

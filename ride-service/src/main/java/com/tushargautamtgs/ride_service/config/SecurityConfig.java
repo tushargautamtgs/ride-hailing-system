@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.POST,
                                 "/rides/*/assign"
-                        ).permitAll()
+                        ).hasAuthority("SERVICE_MATCHING")
 
                         // 🚖 DRIVER APIs
                         .requestMatchers(
@@ -52,6 +52,11 @@ public class SecurityConfig {
                                 org.springframework.http.HttpMethod.POST,
                                 "/rides"
                         ).authenticated()
+
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.POST,
+                                "/rides/*/validate"
+                        ).hasRole("DRIVER")
 
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.GET,
