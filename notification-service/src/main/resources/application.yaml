@@ -1,0 +1,26 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: notification-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: tusharkk59@gmail.com
+    password: hvdbzettldxaxqkk   # ✅ app password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
