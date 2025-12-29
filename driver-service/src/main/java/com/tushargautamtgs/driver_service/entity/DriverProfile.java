@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.Instant;
 
+@Data
 @Entity
 @Table(name = "driver_profiles")
 @Getter
@@ -25,6 +26,7 @@ public class DriverProfile {
     private String name;
 
     private String phone;
+    private String email;
 
     @Column(unique = true)
     private String vehichleNumber;
@@ -39,6 +41,7 @@ public class DriverProfile {
 
     @Enumerated(EnumType.STRING)
     private DriverStatus status;
+
 
 
     @PrePersist

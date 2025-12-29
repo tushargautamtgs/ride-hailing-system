@@ -5,6 +5,7 @@ import com.tushargautamtgs.ride_service.security.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -37,9 +38,9 @@ public class SecurityConfig {
 
                         // 🔐 INTERNAL: matching-service assigns driver
                         .requestMatchers(
-                                org.springframework.http.HttpMethod.POST,
-                                "/rides/*/assign"
-                        ).hasAuthority("SERVICE_MATCHING")
+                                HttpMethod.POST,
+                                "/rides/{rideId}/assign"
+                        ).permitAll()
 
                         // 🚖 DRIVER APIs
                         .requestMatchers(
@@ -56,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.POST,
                                 "/rides/*/validate"
-                        ).hasRole("DRIVER")
+                        ).permitAll()
 
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.GET,

@@ -9,16 +9,25 @@ import org.springframework.kafka.config.TopicBuilder;
 public class KafkaConfig {
     @Bean
     public NewTopic rideRequested() {
-        return TopicBuilder.name("ride-requested").build();
+        return TopicBuilder.name("ride-requested")
+                .partitions(6)
+                .replicas(1)
+                .build();
     }
 
     @Bean
     public NewTopic rideAssigned() {
-        return TopicBuilder.name("ride-assigned").build();
+        return TopicBuilder.name("ride-assigned")
+                .partitions(6)
+                .replicas(1)
+                .build();
     }
 
     @Bean
-    public NewTopic rideStarted(){
-        return TopicBuilder.name("ride-started").build();
+    public NewTopic rideStarted() {
+        return TopicBuilder.name("ride-started")
+                .partitions(6)
+                .replicas(1)
+                .build();
     }
 }

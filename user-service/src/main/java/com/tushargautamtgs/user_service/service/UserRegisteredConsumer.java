@@ -21,13 +21,14 @@ public class UserRegisteredConsumer {
 
         String username = json.getString("username");
         String role = json.optString("role");
+        String email = json.optString("email");
 
         if (!role.equalsIgnoreCase("RIDER")) {
             log.info("Skipping the event -> Role is not rider...");
             return;
         }
 
-        userService.createProfile(username);
+        userService.createProfile(username,email);
         log.info("Profile created  <= Kafka event consumed and Processed =>  {}", username);
 
     }

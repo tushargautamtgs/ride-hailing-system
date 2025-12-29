@@ -3,12 +3,14 @@ package com.tushargautamtgs.ride_service.service.impl;
 import com.tushargautamtgs.ride_service.dto.CreateRideRequest;
 import com.tushargautamtgs.ride_service.dto.RideResponse;
 import com.tushargautamtgs.ride_service.entity.Ride;
+import com.tushargautamtgs.ride_service.entity.RideState;
 import com.tushargautamtgs.ride_service.entity.RideStatus;
 import com.tushargautamtgs.ride_service.event.RideAssignedEvent;
 import com.tushargautamtgs.ride_service.event.RideRequestedEvent;
 import com.tushargautamtgs.ride_service.event.RideStartedEvent;
 import com.tushargautamtgs.ride_service.exception.RideNotFoundException;
 import com.tushargautamtgs.ride_service.repository.RideRepository;
+import com.tushargautamtgs.ride_service.repository.RideStateRepository;
 import com.tushargautamtgs.ride_service.service.RideService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -16,30 +18,30 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
-
-
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RideServiceImpl implements RideService {
 
-
-    private final RideRepository repository;
+    private final RideRepository rideRepository;
+    private final RideStateRepository rideStateRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Transactional
+    /* -------------------------------------------------
+       CREATE RIDE → REDIS ONLY
+    ------------------------------------------------- */
     @Override
     public RideResponse createRide(String riderUsername, CreateRideRequest req) {
 
-        Ride ride = Ride.builder()
+        UUID rideId = UUID.randomUUID();
+
+        RideState state = RideState.builder()
+                .rideId(rideId)
                 .riderUsername(riderUsername)
                 .pickupLat(req.getPickupLat())
                 .pickupLng(req.getPickupLng())
@@ -49,95 +51,135 @@ public class RideServiceImpl implements RideService {
                 .createdAt(Instant.now())
                 .build();
 
-        repository.save(ride);
+        rideStateRepository.save(state);
 
         kafkaTemplate.send(
                 "ride-requested",
-                ride.getId().toString(),
+                rideId.toString(),
                 new RideRequestedEvent(
-                        ride.getId(),
-                        ride.getRiderUsername(),
-                        ride.getPickupLat(),
-                        ride.getPickupLng(),
-                        ride.getDropLat(),
-                        ride.getDropLng(),
-                        ride.getCreatedAt()
+                        rideId,
+                        riderUsername,
+                        req.getPickupLat(),
+                        req.getPickupLng(),
+                        req.getDropLat(),
+                        req.getDropLng(),
+                        state.getCreatedAt()
                 )
         );
 
-        return map(ride);
+        log.info("Kafka event published: ride-requested | rideId={} | rider={}", rideId, riderUsername);
+
+        return map(state);
     }
 
+    /* -------------------------------------------------
+       GET RIDE → REDIS FIRST, DB FALLBACK
+    ------------------------------------------------- */
     @Override
     public RideResponse getRideById(UUID rideId) {
 
-        Ride ride = repository.findById(rideId)
+        RideState state = rideStateRepository.get(rideId);
+        if (state != null) {
+            return map(state);
+        }
+
+        Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new RideNotFoundException("Ride not found"));
 
         return map(ride);
     }
 
-
-
-    @Transactional
+    /* -------------------------------------------------
+       ASSIGN DRIVER → REDIS ONLY
+    ------------------------------------------------- */
     @Override
-    public RideResponse assignDriver(UUID rideId, String driver) {
+    public RideResponse assignDriver(UUID rideId, String driverUsername) {
 
-        log.info("Assigning driver | rideId={} | driver={}", rideId, driver);
-        Ride ride = repository.findById(rideId)
-                .orElseThrow(() -> new RideNotFoundException("Ride not found"));
+        RideState ride = rideStateRepository.get(rideId);
+        if (ride == null) {
+            throw new RideNotFoundException("Ride not found");
+        }
 
-        String code = generateRideCode();
+        String otp = generateRideCode();
 
-        ride.setDriverUsername(driver);
+        ride.setDriverUsername(driverUsername);
         ride.setStatus(RideStatus.ASSIGNED);
-        ride.setRideCode(code);
-        ride.setRideCodeExpiry(Instant.now().plusSeconds(1800)); // 30 minutes expiry
+        ride.setRideCode(otp);
+        ride.setRideCodeExpiry(Instant.now().plusSeconds(1800));
 
-        repository.save(ride);
+        rideStateRepository.save(ride);
 
         kafkaTemplate.send(
                 "ride-assigned",
-                ride.getId().toString(),
+                rideId.toString(),
                 RideAssignedEvent.builder()
-                        .rideId(ride.getId())
+                        .rideId(rideId)
                         .riderUsername(ride.getRiderUsername())
-                        .driverUsername(driver)
+                        .driverUsername(driverUsername)
                         .assignedAt(Instant.now())
                         .build()
         );
 
-        log.info("OTP generated for ride assignment => rideId = {} <==> OTP = {}",rideId,code);
+        log.info("OTP generated | rideId={} | otp={}", rideId, otp);
 
         return map(ride);
     }
 
-
-    @Transactional
     @Override
-    public RideResponse validateRide(
-            UUID rideId,
-            String driverUsername,
-            String rideCode
-    ) {
-        Ride ride = repository.findById(rideId)
-                .orElseThrow(() -> new RideNotFoundException("Ride not found"));
+    public RideResponse getRideForUser(UUID rideId, String username) {
 
-        // 🔐 Only assigned driver allowed
+        RideState ride = rideStateRepository.get(rideId);
+        if (ride == null) {
+            throw new RideNotFoundException("Ride not found");
+        }
+
+        // 🔐 OWNERSHIP CHECK
+        boolean isRider = username.equals(ride.getRiderUsername());
+        boolean isDriver = username.equals(ride.getDriverUsername());
+
+        if (!isRider && !isDriver) {
+            throw new AccessDeniedException("Not allowed to view this ride");
+        }
+
+        return RideResponse.builder()
+                .rideId(ride.getRideId())
+                .status(ride.getStatus().name())
+                .assignedDriverUsername(ride.getDriverUsername())
+                .rideCode(ride.getRideCode()) // 👈 USER ko OTP milega
+                .build();
+    }
+
+
+    /* -------------------------------------------------
+       VALIDATE RIDE (OTP) → REDIS ONLY
+    ------------------------------------------------- */
+    @Override
+    public RideResponse validateRide(UUID rideId,
+                                     String driverUsername,
+                                     String rideCode) {
+
+// for tetsing only
+        log.info("====== VALIDATE called ======");
+        log.info("rideId = {}", rideId);
+        log.info("driverUsername(from JWT) = {}", driverUsername);
+
+
+        RideState ride = rideStateRepository.get(rideId);
+        if (ride == null) {
+            throw new RideNotFoundException("Ride not found");
+        }
+
         if (!driverUsername.equals(ride.getDriverUsername())) {
-
-            log.warn(
-                    "UnAuthorized ride validation attempt | rideId={} | driverUsername={}",
-                    rideId,
-                    ride.getDriverUsername(),
-                    driverUsername
-            );
             throw new AccessDeniedException("Driver not assigned to this ride");
         }
 
         if (ride.getStatus() != RideStatus.ASSIGNED) {
-            throw new IllegalStateException("Ride can't be started");
+            throw new IllegalStateException("Ride cannot be started");
         }
+
+        log.info("⏰ NOW = {}", Instant.now());
+        log.info("⏰ OTP EXPIRY = {}", ride.getRideCodeExpiry());
+
 
         if (ride.getRideCodeExpiry() == null ||
                 ride.getRideCodeExpiry().isBefore(Instant.now())) {
@@ -148,52 +190,87 @@ public class RideServiceImpl implements RideService {
             throw new IllegalArgumentException("Invalid OTP");
         }
 
-        //after validation, start the ride
-
         ride.setStatus(RideStatus.STARTED);
-        ride.setRideCode(null);
         ride.setStartedAt(Instant.now());
-        ride.setCreatedAt(Instant.now());
-
+        ride.setRideCode(null);
         ride.setRideCodeExpiry(null);
 
-        repository.save(ride);
+        rideStateRepository.save(ride);
 
-        log.info(
-                "Ride STARTED successfully | startedAt={} | rideId={} | driverUsername={}",
-                ride.getStartedAt(),
-                ride.getId(),
-                ride.getDriverUsername()
+        kafkaTemplate.send(
+                "ride-started",
+                rideId.toString(),
+                new RideStartedEvent(
+                        rideId,
+                        driverUsername,
+                        ride.getStartedAt()
+                )
         );
 
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronizationAdapter() {
-                    @Override
-                    public void afterCommit() {
-                        kafkaTemplate.send(
-                                "ride-started",
-                                ride.getId().toString(),
-                                new RideStartedEvent(
-                                        ride.getId(),
-                                        ride.getDriverUsername(),
-                                        Instant.now()
-                                )
-                        );
-
-                        log.info(
-                                "Kafka EVENT SENT => ride-started | rideId={} | driverUsername={}",
-                                ride.getId(),
-                                ride.getDriverUsername()
-                        );
-                    }
-                }
-        );
+        log.info("Ride STARTED | rideId={} | driver={}", rideId, driverUsername);
 
         return map(ride);
     }
 
-    private String generateRideCode(){
-        return String.valueOf(1000000 + new Random().nextInt(9000000));
+    /* -------------------------------------------------
+       COMPLETE RIDE → DB WRITE (ONLY HERE)
+    ------------------------------------------------- */
+    @Transactional
+    @Override
+    public void completeRide(UUID rideId, String driverUsername) {
+
+        RideState state = rideStateRepository.get(rideId);
+        if (state == null) {
+            throw new RideNotFoundException("Ride not found in active state");
+        }
+
+        // ✅ 1. DRIVER OWNERSHIP CHECK (MANDATORY)
+        if (!driverUsername.equals(state.getDriverUsername())) {
+            throw new AccessDeniedException("Driver not allowed to complete this ride");
+        }
+
+        // ✅ 2. STATE VALIDATION (FSM RULE)
+        if (state.getStatus() != RideStatus.STARTED) {
+            throw new IllegalStateException(
+                    "Ride can be completed only after STARTED state"
+            );
+        }
+
+        // ✅ 3. REDIS → DB FINAL SNAPSHOT
+        Ride ride = Ride.builder()
+                .id(state.getRideId())
+                .riderUsername(state.getRiderUsername())
+                .driverUsername(state.getDriverUsername())
+                .pickupLat(state.getPickupLat())
+                .pickupLng(state.getPickupLng())
+                .dropLat(state.getDropLat())
+                .dropLng(state.getDropLng())
+                .status(RideStatus.COMPLETED)
+                .createdAt(state.getCreatedAt())
+                .startedAt(state.getStartedAt())
+                .completedAt(Instant.now())
+                .build();
+
+        rideRepository.save(ride);          // ✅ SINGLE DB WRITE
+        rideStateRepository.delete(rideId); // ✅ REDIS CLEANUP
+    }
+
+
+    /* -------------------------------------------------
+       UTILS
+    ------------------------------------------------- */
+    private String generateRideCode() {
+        return String.valueOf(100000 + new Random().nextInt(900000));
+    }
+
+    private RideResponse map(RideState ride) {
+        return RideResponse.builder()
+                .rideId(ride.getRideId())
+                .rider(ride.getRiderUsername())
+                .assignedDriverUsername(ride.getDriverUsername())
+                .status(ride.getStatus().name())
+                .validatedAt(ride.getStartedAt())
+                .build();
     }
 
     private RideResponse map(Ride ride) {
@@ -205,6 +282,4 @@ public class RideServiceImpl implements RideService {
                 .validatedAt(ride.getStartedAt())
                 .build();
     }
-
-
 }

@@ -5,6 +5,7 @@ import com.tushargautamtgs.driver_service.dto.*;
 import com.tushargautamtgs.driver_service.entity.DriverProfile;
 import com.tushargautamtgs.driver_service.entity.DriverStatus;
 import com.tushargautamtgs.driver_service.service.DriverService;
+import com.tushargautamtgs.driver_service.service.DriverStateService;
 import com.tushargautamtgs.driver_service.service.RedisLocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.geo.Point;
@@ -21,6 +22,8 @@ public class DriverController {
 
     private final RedisLocationService locationService;
 
+    private final DriverStateService  driverStateService;
+
     @GetMapping("/me")
     public ResponseEntity<DriverProfileResponse> getmyProfile(@AuthenticationPrincipal String username){
         DriverProfile p = driverService.findByUsername(username)
@@ -35,14 +38,19 @@ public class DriverController {
         return ResponseEntity.ok(toResponse(updated));
     }
 
-    @PutMapping("/me/status")
-    public ResponseEntity<DriverProfileResponse> updateStatus(
-            @AuthenticationPrincipal String username,
-            @RequestBody StatusUpdateRequest req
-    ) {
-        DriverProfile updated = driverService.updateStatus(username, req.getStatus());
-        return ResponseEntity.ok(toResponse(updated));
+    @PutMapping("/me/online")
+    public ResponseEntity<Void> goOnline(@AuthenticationPrincipal String username) {
+        driverStateService.markOnline(username);
+        return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/me/offline")
+    public ResponseEntity<Void> goOffline(@AuthenticationPrincipal String username) {
+        driverStateService.markOffline(username);
+        return ResponseEntity.ok().build();
+    }
+
+
     @PostMapping("/me/location")
     public ResponseEntity<?> updateLocation(
             @AuthenticationPrincipal String username,
@@ -67,13 +75,9 @@ public class DriverController {
 
     @GetMapping("/{username}/available")
     public Boolean isDriverAvailable(@PathVariable String username) {
-
-        DriverProfile driver = driverService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
-
-        return driver.isActive()
-                && driver.getStatus() == DriverStatus.ONLINE;
+        return driverStateService.isOnline(username);
     }
+
 
 
     private DriverProfileResponse toResponse(DriverProfile p){
@@ -82,6 +86,7 @@ public class DriverController {
                 .username(p.getUsername())
                 .name(p.getName())
                 .phone(p.getPhone())
+                .email(p.getEmail())
                 .vehicleNumber(p.getVehichleNumber())
                 .vehicleType(p.getVehicleType())
                 .active(p.isActive())

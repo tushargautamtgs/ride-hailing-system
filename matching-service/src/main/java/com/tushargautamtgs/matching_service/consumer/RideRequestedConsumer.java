@@ -20,7 +20,7 @@ public class RideRequestedConsumer {
     )
     public void consume(RideRequestedEvent event) {
 
-        log.info("🔥 Received ride-requested event | rideId={}", event.getRideId());
+        log.info("==>> Received ride-requested event | rideId={}", event.getRideId());
 
         matchingService.match(event);
     }

@@ -5,6 +5,7 @@ import jakarta.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -32,7 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/location/drivers/**")
                         .hasRole("DRIVER")
 
-                        // 🔐 INTERNAL: only matching-service
+                        // 🔐 INTERNAL SERVICE CALL
                         .requestMatchers("/location/nearby")
                         .hasAuthority("SERVICE_MATCHING")
 
@@ -40,7 +41,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 }

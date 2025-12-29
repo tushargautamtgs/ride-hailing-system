@@ -15,6 +15,7 @@ public class DriverProfileResponse {
     private String username;
     private String name;
     private String phone;
+    private String email;
     private String vehicleNumber;
     private String vehicleType;
     private boolean active;

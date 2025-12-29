@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8031
 
 spring:
   application:
@@ -10,6 +10,14 @@ spring:
     username: postgres
     password: admin
     driver-class-name: org.postgresql.Driver
+
+    hikari:
+      pool-name: RideHikariPool
+      maximum-pool-size: 15
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 30000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:

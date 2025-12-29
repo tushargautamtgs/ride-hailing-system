@@ -15,7 +15,7 @@ import java.util.UUID;
 public class Ride {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String riderUsername;
@@ -29,8 +29,9 @@ public class Ride {
     @Enumerated(EnumType.STRING)
     private RideStatus status;
 
-    private String rideCode;
-    private Instant rideCodeExpiry;
+//    private String rideCode;
+//    private Instant rideCodeExpiry;   setting up the redis cache for ride codes
     private Instant createdAt;
     private Instant startedAt;
+    private Instant completedAt;
 }

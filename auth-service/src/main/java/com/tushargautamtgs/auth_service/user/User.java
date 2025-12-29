@@ -2,6 +2,7 @@ package com.tushargautamtgs.auth_service.user;
 
 import com.tushargautamtgs.auth_service.token.RefreshToken;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
@@ -35,4 +36,7 @@ public class User {
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
     private Set<Role> roles;
+
+    @NotNull
+    private String email;
 }

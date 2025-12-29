@@ -7,11 +7,22 @@ import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
 public class KafkaConfig {
+
+
     @Bean
-    public NewTopic userDeletedTopic() {
-        return TopicBuilder.name("user-deleted")
-                .partitions(1) // only for testing purpose
+    public NewTopic userRegisteredTopic() {
+        return TopicBuilder.name("user-registered")
+                .partitions(6)
                 .replicas(1)
                 .build();
     }
+
+    @Bean
+    public NewTopic userDeletedTopic() {
+        return TopicBuilder.name("user-deleted")
+                .partitions(4) // only for testing purpose
+                .replicas(1)
+                .build();
+    }
+
 }

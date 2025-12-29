@@ -13,11 +13,13 @@ public class KafkaProducerService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public void sendUserRegisteredEvent(String username, String role) {
+    // added email new field
+    public void sendUserRegisteredEvent(String username, String role,String email)  {
 
         JSONObject json = new JSONObject();
         json.put("username", username);
         json.put("role", role);
+        json.put("email",email); // added new
 
         String message = json.toString();
         String topic = "user-registered";

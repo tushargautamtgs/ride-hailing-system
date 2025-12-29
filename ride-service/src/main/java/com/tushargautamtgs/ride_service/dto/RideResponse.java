@@ -16,7 +16,9 @@ public class RideResponse {
 
     private String assignedDriverUsername;
 
-    private String status;   // CREATED | ASSIGNED | STARTED | COMPLETED
+    private String status;
+
+    private String rideCode; // CREATED | ASSIGNED | STARTED | COMPLETED
 
     private Instant validatedAt; // null until ride starts
 }

@@ -1,5 +1,5 @@
 server:
-  port: 8091
+  port: 8041
 
 spring:
   application:
@@ -7,6 +7,8 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    listner:
+        concurrency: 1
     consumer:
       group-id: notification-service-group
       auto-offset-reset: latest
@@ -16,8 +18,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: tusharkk59@gmail.com
-    password: hvdbzettldxaxqkk   # ✅ app password
+    username: ridehailingsystem@gmail.com
+    password: dxqmkrujqqkbvtvm   # ✅ app password
     properties:
       mail:
         smtp:

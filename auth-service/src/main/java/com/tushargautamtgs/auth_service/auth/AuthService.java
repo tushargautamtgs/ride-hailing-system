@@ -46,13 +46,15 @@ public class AuthService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(role))
+                .email(request.getEmail())
                 .build();
         userRepository.save(user);
 
         //sending kafka event
         procuder.sendUserRegisteredEvent(
                 user.getUsername(),
-                role.name()
+                role.name(),
+                user.getEmail()
         );
 
     }

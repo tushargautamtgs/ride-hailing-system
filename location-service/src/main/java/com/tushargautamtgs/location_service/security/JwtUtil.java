@@ -18,7 +18,6 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // ===== validate token (signature + expiry) =====
     public boolean validateToken(String token) {
         try {
             parseClaims(token);
@@ -28,7 +27,6 @@ public class JwtUtil {
         }
     }
 
-    // ===== extract username (sub) =====
     public String extractUsername(String token) {
         return parseClaims(token).getSubject();
     }
@@ -43,7 +41,6 @@ public class JwtUtil {
         return List.of();
     }
 
-    // ===== extract SERVICE authorities =====
     @SuppressWarnings("unchecked")
     public List<String> extractAuthorities(String token) {
         Object auths = parseClaims(token).get("authorities");
@@ -61,4 +58,6 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+
 }

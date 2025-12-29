@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8021
 
 spring:
   application:
@@ -9,6 +9,13 @@ spring:
     url: jdbc:postgresql://localhost:5432/userdb
     username: postgres
     password: admin
+    hikari:
+      pool-name: UserHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 4
+      connection-timeout: 30000
+      idle-timeout: 30000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
@@ -20,11 +27,14 @@ spring:
     consumer:
       group-id: user-service-group
       auto-offset-reset: earliest
+      allow-auto-create-topics: false
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+      instance:
+        instance-id: ${spring.application.name}:${server.port}
 
 
 security:

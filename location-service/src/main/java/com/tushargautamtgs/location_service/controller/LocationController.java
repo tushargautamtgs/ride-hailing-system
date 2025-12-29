@@ -4,6 +4,7 @@ import com.tushargautamtgs.location_service.dto.LocationUpdateRequest;
 import com.tushargautamtgs.location_service.dto.NearbyDriversResponse;
 import com.tushargautamtgs.location_service.service.RedisLocationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,7 @@ public class LocationController {
         );
     }
 
+    @PreAuthorize("hasAuthority('SERVICE_MATCHING')")
     @GetMapping("/nearby")
     public NearbyDriversResponse nearbyDrivers(
             @RequestParam("lat") double lat,

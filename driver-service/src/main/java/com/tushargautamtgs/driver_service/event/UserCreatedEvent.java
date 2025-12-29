@@ -8,6 +8,7 @@ public class UserCreatedEvent {
     private String role; // ADD THIS
     private String name;
     private String phone;
+    private String email;
     private String vehicleNumber;
     private String vehicleType;
 }

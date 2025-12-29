@@ -17,8 +17,17 @@ public class DriverService {
 
     private final DriverProfileRepository repo;
     public Optional<DriverProfile> findByUsername(String username){
-        return repo.findByUsername(username);
+
+        Optional<DriverProfile> opt = repo.findByUsername(username);
+
+        opt.ifPresent(p ->
+                System.out.println("EMAIL FROM DB = " + p.getEmail())
+        );
+
+        return opt;
     }
+
+
 
 
     @Transactional
@@ -43,16 +52,13 @@ public class DriverService {
     }
 
     @Transactional
-    public DriverProfile createIfNotExists(String username, String name, String phone, String vehicleNumber,String vehicleType){
+    public DriverProfile createIfNotExists(String username,String email){
         return repo.findByUsername(username).orElseGet(() -> {
             DriverProfile p = DriverProfile.builder()
                     .username(username)
-                    .name(name)
-                    .phone(phone)
-                    .vehichleNumber(vehicleNumber)
-                    .vehicleType(vehicleType)
+                    .email(email)
                     .active(true)
-                    .status(DriverStatus.OFFLINE)
+                    .status(DriverStatus.ONLINE)
                     .build();
             return repo.save(p);
         });

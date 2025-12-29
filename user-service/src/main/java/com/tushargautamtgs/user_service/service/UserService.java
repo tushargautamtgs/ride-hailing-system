@@ -31,11 +31,12 @@ public class UserService {
         return repo.save(profile);
     }
 
-    public  void createProfile(String username){
+    public  void createProfile(String username,String email){
         if (repo.findByUsername(username).isPresent())
             return;
         UserProfile profile = UserProfile.builder()
                 .username(username)
+                .email(email)
                 .createdAt(java.time.Instant.now())
                 .build();
         repo.save(profile);

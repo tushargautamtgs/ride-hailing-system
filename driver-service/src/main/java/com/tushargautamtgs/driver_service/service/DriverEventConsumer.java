@@ -18,8 +18,11 @@ public class DriverEventConsumer {
     private final ObjectMapper objectMapper;
     private final DriverService driverService;
 
+    private final DriverStateService driverStateService;
+
+
     @KafkaListener(topics = "user-registered", groupId = "driver-service-group")
-    public void consumerDriverRegistered(ConsumerRecord<String ,String> record){
+    public void consumerDriverRegistered(ConsumerRecord<String, String> record) {
         try {
             log.info("=> Received event from Kafka topic='user-registered': {}", record.value());
 
@@ -39,10 +42,7 @@ public class DriverEventConsumer {
 
             driverService.createIfNotExists(
                     event.getUsername(),
-                    event.getName(),
-                    event.getPhone(),
-                    event.getVehicleNumber(),
-                    event.getVehicleType()
+                    event.getEmail()
             );
 
             log.info("=>> Driver profile created/verified for username={}", event.getUsername());
@@ -51,19 +51,19 @@ public class DriverEventConsumer {
             log.error("==> Error processing Kafka event in DriverEventConsumer", e);
         }
     }
+
     @KafkaListener(topics = "ride-assigned", groupId = "driver-service-group")
     public void consumeRideAssigned(ConsumerRecord<String, String> record) {
         try {
             RideAssignedEvent event =
                     objectMapper.readValue(record.value(), RideAssignedEvent.class);
 
-            log.info(
-                    "🚕 Ride assigned | rideId={} | driver={}",
-                    event.getRideId(),
-                    event.getDriverUsername()
-            );
+            log.info("Ride ASSIGNED | driver={}", event.getDriverUsername());
 
-            driverService.markDriverAssigned(event.getDriverUsername());
+            driverStateService.markAssigned(
+                    event.getDriverUsername(),
+                    event.getRideId().toString()
+            );
 
         } catch (Exception e) {
             log.error("Error processing ride-assigned event", e);
@@ -77,18 +77,16 @@ public class DriverEventConsumer {
             RideStartedEvent event =
                     objectMapper.readValue(record.value(), RideStartedEvent.class);
 
-            log.info(
-                    "▶️ Ride started | rideId={} | driver={}",
-                    event.getRideId(),
+            log.info("Ride STARTED | driver={} | rideId={}",
+                    event.getDriverUsername(), event.getRideId());
+
+            driverStateService.markOnRide(
                     event.getDriverUsername()
             );
-
-            driverService.markDriverOnRide(event.getDriverUsername());
 
         } catch (Exception e) {
             log.error("Error processing ride-started event", e);
         }
     }
-
 }
 

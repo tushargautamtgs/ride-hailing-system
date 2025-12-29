@@ -24,7 +24,6 @@ public class UserProfile {
     private String fullName;
     private String email;
     private String phone;
-
     private Instant createdAt;
 
     // if not req then I'll remove it
