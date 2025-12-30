@@ -19,7 +19,7 @@ import java.time.Duration;
 public class MatchingService {
 
     private static final double SEARCH_RADIUS_KM = 5.0;
-    private static final Duration DRIVER_LOCK_TTL = Duration.ofSeconds(10);
+    private static final Duration DRIVER_LOCK_TTL = Duration.ofMinutes(2);
 
     private final LocationClient locationClient;
     private final RideClient rideClient;

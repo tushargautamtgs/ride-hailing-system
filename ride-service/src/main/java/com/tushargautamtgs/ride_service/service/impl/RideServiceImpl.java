@@ -6,6 +6,7 @@ import com.tushargautamtgs.ride_service.entity.Ride;
 import com.tushargautamtgs.ride_service.entity.RideState;
 import com.tushargautamtgs.ride_service.entity.RideStatus;
 import com.tushargautamtgs.ride_service.event.RideAssignedEvent;
+import com.tushargautamtgs.ride_service.event.RideCompletedEvent;
 import com.tushargautamtgs.ride_service.event.RideRequestedEvent;
 import com.tushargautamtgs.ride_service.event.RideStartedEvent;
 import com.tushargautamtgs.ride_service.exception.RideNotFoundException;
@@ -158,7 +159,7 @@ public class RideServiceImpl implements RideService {
                                      String driverUsername,
                                      String rideCode) {
 
-// for tetsing only
+// for testing only
         log.info("====== VALIDATE called ======");
         log.info("rideId = {}", rideId);
         log.info("driverUsername(from JWT) = {}", driverUsername);
@@ -253,6 +254,20 @@ public class RideServiceImpl implements RideService {
 
         rideRepository.save(ride);          // ✅ SINGLE DB WRITE
         rideStateRepository.delete(rideId); // ✅ REDIS CLEANUP
+
+
+        kafkaTemplate.send(
+                "ride-completed",
+                rideId.toString(),
+                new RideCompletedEvent(
+                        rideId,
+                        driverUsername,
+                        ride.getCompletedAt()
+                )
+        );
+
+        log.info("ride COMPLETED | rideId={} | driver={}", rideId, driverUsername);
+        log.info("KAFKA event published: ride-completed | rideId={}", rideId);
     }
 
 

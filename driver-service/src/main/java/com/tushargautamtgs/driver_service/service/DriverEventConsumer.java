@@ -2,6 +2,7 @@ package com.tushargautamtgs.driver_service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tushargautamtgs.driver_service.config.events.RideAssignedEvent;
+import com.tushargautamtgs.driver_service.config.events.RideCompletedEvent;
 import com.tushargautamtgs.driver_service.config.events.RideStartedEvent;
 import com.tushargautamtgs.driver_service.event.UserCreatedEvent;
 import lombok.RequiredArgsConstructor;
@@ -88,5 +89,22 @@ public class DriverEventConsumer {
             log.error("Error processing ride-started event", e);
         }
     }
+
+    @KafkaListener(topics = "ride-completed", groupId = "driver-service-group")
+    public void consumeCompleteRide(ConsumerRecord<String, String> record) {
+        try {
+            RideCompletedEvent event =
+                    objectMapper.readValue(record.value(), RideCompletedEvent.class);
+
+            log.info("Ride COMPLETED | driver={} | rideId={}",
+                    event.getDriverUsername(), event.getRideId());
+
+            driverStateService.markOnline(event.getDriverUsername());
+
+        } catch (Exception e) {
+            log.error("Error processing ride-completed event | payload={}", record.value(), e);
+        }
+    }
+
 }
 
