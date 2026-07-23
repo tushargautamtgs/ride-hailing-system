@@ -3,6 +3,7 @@ package com.tushargautamtgs.api_gateway.config;
 
 import com.tushargautamtgs.api_gateway.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,11 +30,16 @@ public class JwtAuthenticationFilter implements WebFilter {
     private static  final List<String> PUBLIC_PATHS = List.of(
             "/auth/login",
             "/auth/register",
+            "/auth/signup",
             "/auth/refresh",
             "/actuator/health"
     );
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain){
+
+        if (exchange.getRequest().getMethod()== HttpMethod.OPTIONS){
+            return chain.filter(exchange);
+        }
         String path = exchange.getRequest().getURI().getPath();
 
         if (isPublicPath(path)){
