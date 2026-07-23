@@ -5,6 +5,8 @@ import com.tushargautamtgs.ride_service.dto.AssignDriverRequest;
 import com.tushargautamtgs.ride_service.dto.CreateRideRequest;
 import com.tushargautamtgs.ride_service.dto.RideResponse;
 import com.tushargautamtgs.ride_service.dto.ValidateRideRequest;
+import com.tushargautamtgs.ride_service.pricing.dto.PricingResponse;
+import com.tushargautamtgs.ride_service.pricing.service.PricingService;
 import com.tushargautamtgs.ride_service.service.RideService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +28,17 @@ public class RideController {
 
     private final RideService rideService;
 
+    private final PricingService pricingService;
+
+    @PreAuthorize("hasRole('RIDER')")
     @PostMapping
-    public ResponseEntity<RideResponse> createRide(@AuthenticationPrincipal String username, @RequestBody CreateRideRequest request) {
-        return ResponseEntity.ok(rideService.createRide(username, request));
+    public ResponseEntity<RideResponse> createRide(
+            @AuthenticationPrincipal String username,
+            @RequestBody CreateRideRequest request
+    ) {
+        return ResponseEntity.ok(
+                rideService.createRide(username, request)
+        );
     }
 //
     @GetMapping("/me/{rideId}")
@@ -104,5 +114,22 @@ public class RideController {
         rideService.completeRide(rideId, driverUsername);
     }
 
+
+
+    @PreAuthorize("hasRole('RIDER')")
+    @GetMapping("/fetchFare")
+    public PricingResponse fetchFare(
+            @RequestParam Double pickupLat,
+            @RequestParam Double pickupLng,
+            @RequestParam Double dropLat,
+            @RequestParam Double dropLng
+    ) {
+        return rideService.fetchFare(
+                pickupLat,
+                pickupLng,
+                dropLat,
+                dropLng
+        );
+    }
 }
 

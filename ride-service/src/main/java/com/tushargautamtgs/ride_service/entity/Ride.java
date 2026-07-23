@@ -1,6 +1,5 @@
 package com.tushargautamtgs.ride_service.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,13 +8,14 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "rides")
-@Getter @Setter @Builder
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Ride {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String riderUsername;
@@ -23,15 +23,29 @@ public class Ride {
 
     private Double pickupLat;
     private Double pickupLng;
+
     private Double dropLat;
     private Double dropLng;
+
+    // ---------------- Pricing ----------------
+
+    private Double estimatedDistanceKm;
+
+    private Integer estimatedDurationMinutes;
+
+    private Double estimatedFare;
+
+    @Builder.Default
+    private String currency = "INR";
+
+    // -----------------------------------------
 
     @Enumerated(EnumType.STRING)
     private RideStatus status;
 
-//    private String rideCode;
-//    private Instant rideCodeExpiry;   setting up the redis cache for ride codes
     private Instant createdAt;
+
     private Instant startedAt;
+
     private Instant completedAt;
 }

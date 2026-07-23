@@ -6,9 +6,9 @@ spring:
     name: ride-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ride_db
-    username: postgres
-    password: admin
+    url: jdbc:postgresql://localhost:5432/ridedb
+    username: tushar
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
     hikari:

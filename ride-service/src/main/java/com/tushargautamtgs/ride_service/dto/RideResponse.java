@@ -18,7 +18,27 @@ public class RideResponse {
 
     private String status;
 
-    private String rideCode; // CREATED | ASSIGNED | STARTED | COMPLETED
+    // Pricing
+    private Double estimatedFare;
 
-    private Instant validatedAt; // null until ride starts
+    private Double estimatedDistanceKm;
+
+    private Integer estimatedDurationMinutes;
+
+    private String currency;
+
+    // Ride Verification
+    private String rideCode;
+
+    private Instant validatedAt;
+
+    // Ride Coordinates
+    private Double pickupLat;
+    private Double pickupLng;
+
+    private Double dropLat;
+    private Double dropLng;
+
+    // Ride Time
+    private Instant createdAt;
 }

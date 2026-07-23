@@ -1,6 +1,5 @@
 package com.tushargautamtgs.ride_service.entity;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,21 +15,37 @@ import java.util.UUID;
 public class RideState {
 
     private UUID rideId;
+
     private String riderUsername;
-    private  String driverUsername;
+
+    private String driverUsername;
 
     private double pickupLat;
     private double pickupLng;
+
     private double dropLat;
     private double dropLng;
 
-    private  RideStatus status;
+    // ---------------- Pricing ----------------
+
+    private Double estimatedDistanceKm;
+
+    private Integer estimatedDurationMinutes;
+
+    private Double estimatedFare;
+
+    @Builder.Default
+    private String currency = "INR";
+
+    // -----------------------------------------
+
+    private RideStatus status;
 
     private String rideCode;
+
     private Instant rideCodeExpiry;
 
     private Instant createdAt;
 
     private Instant startedAt;
-
 }

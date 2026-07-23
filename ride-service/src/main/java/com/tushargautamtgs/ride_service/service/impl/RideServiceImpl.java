@@ -10,6 +10,8 @@ import com.tushargautamtgs.ride_service.event.RideCompletedEvent;
 import com.tushargautamtgs.ride_service.event.RideRequestedEvent;
 import com.tushargautamtgs.ride_service.event.RideStartedEvent;
 import com.tushargautamtgs.ride_service.exception.RideNotFoundException;
+import com.tushargautamtgs.ride_service.pricing.dto.PricingResponse;
+import com.tushargautamtgs.ride_service.pricing.service.PricingService;
 import com.tushargautamtgs.ride_service.repository.RideRepository;
 import com.tushargautamtgs.ride_service.repository.RideStateRepository;
 import com.tushargautamtgs.ride_service.service.RideService;
@@ -33,6 +35,8 @@ public class RideServiceImpl implements RideService {
     private final RideStateRepository rideStateRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    private final PricingService pricingService;
+
     /* -------------------------------------------------
        CREATE RIDE → REDIS ONLY
     ------------------------------------------------- */
@@ -41,13 +45,29 @@ public class RideServiceImpl implements RideService {
 
         UUID rideId = UUID.randomUUID();
 
+        PricingResponse pricing = pricingService.calculate(
+                req.getPickupLat(),
+                req.getPickupLng(),
+                req.getDropLat(),
+                req.getDropLng()
+        );
+
         RideState state = RideState.builder()
                 .rideId(rideId)
                 .riderUsername(riderUsername)
+
                 .pickupLat(req.getPickupLat())
                 .pickupLng(req.getPickupLng())
+
                 .dropLat(req.getDropLat())
                 .dropLng(req.getDropLng())
+
+                // Pricing
+                .estimatedDistanceKm(pricing.getEstimatedDistanceKm())
+                .estimatedDurationMinutes(pricing.getEstimatedDurationMinutes())
+                .estimatedFare(pricing.getEstimatedFare())
+                .currency(pricing.getCurrency())
+
                 .status(RideStatus.REQUESTED)
                 .createdAt(Instant.now())
                 .build();
@@ -124,6 +144,22 @@ public class RideServiceImpl implements RideService {
         log.info("OTP generated | rideId={} | otp={}", rideId, otp);
 
         return map(ride);
+    }
+
+
+    @Override
+    public PricingResponse fetchFare(
+            Double pickupLat,
+            Double pickupLng,
+            Double dropLat,
+            Double dropLng
+    ) {
+        return pricingService.calculate(
+                pickupLat,
+                pickupLng,
+                dropLat,
+                dropLng
+        );
     }
 
     @Override
@@ -250,6 +286,10 @@ public class RideServiceImpl implements RideService {
                 .createdAt(state.getCreatedAt())
                 .startedAt(state.getStartedAt())
                 .completedAt(Instant.now())
+                .estimatedDistanceKm(state.getEstimatedDistanceKm())
+                .estimatedDurationMinutes(state.getEstimatedDurationMinutes())
+                .estimatedFare(state.getEstimatedFare())
+                .currency(state.getCurrency())
                 .build();
 
         rideRepository.save(ride);          // ✅ SINGLE DB WRITE
@@ -279,22 +319,52 @@ public class RideServiceImpl implements RideService {
     }
 
     private RideResponse map(RideState ride) {
+
         return RideResponse.builder()
                 .rideId(ride.getRideId())
                 .rider(ride.getRiderUsername())
                 .assignedDriverUsername(ride.getDriverUsername())
                 .status(ride.getStatus().name())
+
+                // Pricing
+                .estimatedFare(ride.getEstimatedFare())
+                .estimatedDistanceKm(ride.getEstimatedDistanceKm())
+                .estimatedDurationMinutes(ride.getEstimatedDurationMinutes())
+                .currency(ride.getCurrency())
+
+                // Locations
+                .pickupLat(ride.getPickupLat())
+                .pickupLng(ride.getPickupLng())
+                .dropLat(ride.getDropLat())
+                .dropLng(ride.getDropLng())
+
+                .rideCode(ride.getRideCode())
                 .validatedAt(ride.getStartedAt())
+                .createdAt(ride.getCreatedAt())
                 .build();
     }
-
     private RideResponse map(Ride ride) {
+
         return RideResponse.builder()
                 .rideId(ride.getId())
                 .rider(ride.getRiderUsername())
                 .assignedDriverUsername(ride.getDriverUsername())
                 .status(ride.getStatus().name())
+
+                // Pricing
+                .estimatedFare(ride.getEstimatedFare())
+                .estimatedDistanceKm(ride.getEstimatedDistanceKm())
+                .estimatedDurationMinutes(ride.getEstimatedDurationMinutes())
+                .currency(ride.getCurrency())
+
+                // Locations
+                .pickupLat(ride.getPickupLat())
+                .pickupLng(ride.getPickupLng())
+                .dropLat(ride.getDropLat())
+                .dropLng(ride.getDropLng())
+
                 .validatedAt(ride.getStartedAt())
+                .createdAt(ride.getCreatedAt())
                 .build();
     }
 }

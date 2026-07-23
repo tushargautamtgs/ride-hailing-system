@@ -1,7 +1,9 @@
 package com.tushargautamtgs.ride_service.service;
 
+import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.tushargautamtgs.ride_service.dto.CreateRideRequest;
 import com.tushargautamtgs.ride_service.dto.RideResponse;
+import com.tushargautamtgs.ride_service.pricing.dto.PricingResponse;
 import jakarta.transaction.Transactional;
 
 import java.util.UUID;
@@ -26,6 +28,13 @@ public interface RideService {
         ------------------------------------------------- */
     @Transactional
     void completeRide(UUID rideId, String driverUsername);
+
+    PricingResponse fetchFare(
+            Double pickupLat,
+            Double pickupLng,
+            Double dropLng,
+            Double dropLat
+    );
 
 
 }
